@@ -6,5 +6,7 @@
     <string name="country_population">Population: </string>
 
     <string name="transition_name_flag">transition:FLAG</string>
+    <string name="title_dialog">Текущее Время</string>
+
 
 </resources>

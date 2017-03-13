@@ -30,7 +30,7 @@ public class TimeService extends Service{
             public void run() {
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
                 String dataStr = simpleDateFormat.format(new Date());
-
+                Log.d(ListCountries.TAG, dataStr);
                 Countries countries = Countries.get();
 
                 String urlFlag = "534535";
@@ -50,8 +50,6 @@ public class TimeService extends Service{
         thread.start();
         return START_REDELIVER_INTENT;
     }
-
-
 
     @Override
     public void onDestroy() {

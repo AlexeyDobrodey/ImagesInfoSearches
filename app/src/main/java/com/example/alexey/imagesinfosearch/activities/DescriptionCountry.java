@@ -2,6 +2,7 @@ package com.example.alexey.imagesinfosearch.activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import com.example.alexey.imagesinfosearch.R;
 import com.example.alexey.imagesinfosearch.models.Countries;
 import com.example.alexey.imagesinfosearch.models.Country;
+import com.example.alexey.imagesinfosearch.services.TimeReceiver;
 import com.squareup.picasso.Picasso;
 
 /**
@@ -18,12 +20,13 @@ import com.squareup.picasso.Picasso;
  */
 
 public class DescriptionCountry extends AppCompatActivity {
-
     private ImageView mCountryFlag;
     private TextView mDescription;
 
     private Country mCountry;
     private static final String EXTRA_ID_COUNTRY = "country_extra";
+
+    private TimeReceiver mTimeReceiver;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -46,9 +49,24 @@ public class DescriptionCountry extends AppCompatActivity {
         );
     }
 
-     public static Intent newInstance(Context ctx, int idCountry) {
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        mTimeReceiver = new TimeReceiver(this);
+        IntentFilter intentFilter = new IntentFilter(TimeReceiver.TIME_BROADCAST);
+        registerReceiver(mTimeReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mTimeReceiver);
+    }
+
+    public static Intent newInstance(Context ctx, int idCountry) {
         Intent intent = new Intent(ctx, DescriptionCountry.class);
-         intent.putExtra(EXTRA_ID_COUNTRY, idCountry);
-         return intent;
+        intent.putExtra(EXTRA_ID_COUNTRY, idCountry);
+        return intent;
     }
 }

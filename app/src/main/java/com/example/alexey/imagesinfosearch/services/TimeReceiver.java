@@ -29,6 +29,6 @@ public class TimeReceiver extends BroadcastReceiver {
 
         android.app.FragmentManager fm = mAppCompatActivity.getFragmentManager();
         DialogTimeNotification dialog = DialogTimeNotification.newInstance(time, urlFlag);
-        dialog.show(fm, "d");
+        dialog.show(fm, "dialog_time");
     }
 }

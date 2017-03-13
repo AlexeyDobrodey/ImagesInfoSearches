@@ -14,4 +14,13 @@
         android:id="@+id/id_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+
+    <ImageView
+        android:id="@+id/id_img_error_connection"
+        android:layout_width="125dp"
+        android:layout_height="125dp"
+        android:layout_centerInParent="true"
+        android:src="@drawable/not_connection_internet"
+        android:visibility="invisible"
+        />
 </RelativeLayout>

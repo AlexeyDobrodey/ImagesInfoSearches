@@ -40,12 +40,12 @@ public class DialogTimeNotification extends DialogFragment {
 
 
         ImageView imageView = (ImageView)view.findViewById(R.id.country_flag);
-        Picasso.with(getActivity()).load(mURLFlag).error(R.drawable.bangladesh).into(imageView);
+        Picasso.with(getActivity()).load(mURLFlag).error(R.drawable.img_not_found).into(imageView);
 
         TextView textView = (TextView) view.findViewById(R.id.now_time);
         textView.setText(mTime);
         return new AlertDialog.Builder(getActivity())
-                .setTitle("Now Time")
+                .setTitle(getString(R.string.title_dialog))
                 .setView(view)
                 .setPositiveButton(android.R.string.ok, null)
                 .create();

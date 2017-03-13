@@ -1,11 +1,15 @@
 package com.example.alexey.imagesinfosearch.activities;
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.util.Pair;
@@ -30,6 +34,7 @@ import com.example.alexey.imagesinfosearch.services.TimeReceiver;
 import com.example.alexey.imagesinfosearch.services.TimeService;
 import com.squareup.picasso.Picasso;
 
+import java.util.Calendar;
 
 
 public class ListCountries extends AppCompatActivity {
@@ -37,25 +42,43 @@ public class ListCountries extends AppCompatActivity {
     public RecyclerView mRecyclerView;
 
     public Countries mCountries;
+    private TimeReceiver mTimeReceiver;
+    private ImageView mErrorConnectInternet;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_list_countries);
 
+        runServices();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{
+                            Manifest.permission.INTERNET, Manifest.permission.ACCESS_WIFI_STATE,
+                            Manifest.permission.ACCESS_NETWORK_STATE,
+                    }
+                    , 1);
+        }
 
-        TimeReceiver timeReceiver = new TimeReceiver(this);
-        IntentFilter intentFilter = new IntentFilter(TimeReceiver.TIME_BROADCAST);
-        registerReceiver(timeReceiver, intentFilter);
+        initUI();
+    }
 
-        Intent intent = new Intent(this, TimeService.class);
-        startService(intent);
-
+    private void initUI() {
         mRecyclerView = (RecyclerView) findViewById(R.id.id_recycler_view);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         setSwipeToRecyclerView();
 
+
+        mErrorConnectInternet = (ImageView) findViewById(R.id.id_img_error_connection);
+        mErrorConnectInternet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mErrorConnectInternet.setVisibility(View.INVISIBLE);
+                DownloadJsonTask downloadJsonTask = new DownloadJsonTask();
+                downloadJsonTask.execute();
+            }
+        });
 
         mCountries = Countries.get();
         if(mCountries.isEmpty()) {
@@ -64,30 +87,57 @@ public class ListCountries extends AppCompatActivity {
         }
         else
             updateListCountries();
-
     }
 
     private void setSwipeToRecyclerView() {
         ItemTouchHelper.SimpleCallback simpleCallback =
                 new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                return false;
-            }
+                    @Override
+                    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                        return false;
+                    }
 
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                int swipedPosition = viewHolder.getAdapterPosition();
-                CountryInfoAdapter adapter = (CountryInfoAdapter)mRecyclerView.getAdapter();
-                adapter.onRemoveItem(swipedPosition);
-            }
-        };
+                    @Override
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                        int swipedPosition = viewHolder.getAdapterPosition();
+                        CountryInfoAdapter adapter = (CountryInfoAdapter)mRecyclerView.getAdapter();
+                        adapter.onRemoveItem(swipedPosition);
+                    }
+                };
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
         itemTouchHelper.attachToRecyclerView(mRecyclerView);
     }
 
-    private class DownloadJsonTask extends AsyncTask<Void, Void, String> {
+    private void runServices() {
+        Intent intent = new Intent(this, TimeService.class);
+        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, 0);
 
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        long time = calendar.getTimeInMillis();
+
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, time, 2 * 60 * 1000, pendingIntent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        mTimeReceiver = new TimeReceiver(this);
+        IntentFilter intentFilter = new IntentFilter(TimeReceiver.TIME_BROADCAST);
+        registerReceiver(mTimeReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mTimeReceiver);
+    }
+
+
+
+    private class DownloadJsonTask extends AsyncTask<Void, Void, String> {
         private ProgressDialog mProgressDialog;
 
         @Override
@@ -103,16 +153,18 @@ public class ListCountries extends AppCompatActivity {
 
         @Override
         protected String doInBackground(Void... params) {
-
             return HttpClient.getJSonObjString();
         }
 
         @Override
         protected void onPostExecute(String jsonStr) {
             super.onPostExecute(jsonStr);
-            Log.d(ListCountries.TAG, jsonStr);
-            mCountries = JsonParcer.getSomeCountries(jsonStr);
-            updateListCountries();
+            if(jsonStr == null) {
+                mErrorConnectInternet.setVisibility(View.VISIBLE);
+            }else {
+                mCountries = JsonParcer.getSomeCountries(jsonStr);
+                updateListCountries();
+            }
             mProgressDialog.dismiss();
         }
     }
@@ -121,7 +173,6 @@ public class ListCountries extends AppCompatActivity {
         CountryInfoAdapter countryInfoAdapter = new CountryInfoAdapter();
         mRecyclerView.setAdapter(countryInfoAdapter);
     }
-
 
     public class CountryInfoAdapter extends RecyclerView.Adapter<CountryInfoView> {
 
@@ -166,6 +217,7 @@ public class ListCountries extends AppCompatActivity {
         public void setCountry(Country country, final int idCountry) {
             Picasso.with(ListCountries.this)
                     .load(country.getFlag())
+                    .error(R.drawable.img_not_found)
                     .into(mCountryFlag);
 
             mRank.setText(getString(R.string.country_rank) + String.valueOf(country.getRank()));
