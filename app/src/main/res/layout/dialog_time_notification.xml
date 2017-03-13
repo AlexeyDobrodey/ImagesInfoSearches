@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/country_flag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/bangladesh"
+        android:layout_alignParentLeft="true"
+        android:layout_margin="5dp"
+        />
+
+    <TextView
+        android:id="@+id/now_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:text="time: 12:40"
+        android:layout_toRightOf="@+id/country_flag"
+        android:layout_centerVertical="true"
+        />
+
+
+</RelativeLayout>

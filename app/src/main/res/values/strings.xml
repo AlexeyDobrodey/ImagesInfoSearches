@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ImagesInfoSearch</string>
+
+    <string name="country_rank">Rank: </string>
+    <string name="country_name">Name: </string>
+    <string name="country_population">Population: </string>
+
+    <string name="transition_name_flag">transition:FLAG</string>
+
+</resources>
